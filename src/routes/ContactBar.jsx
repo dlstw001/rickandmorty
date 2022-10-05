@@ -1,25 +1,25 @@
-import http from "../../helper/http";
-import Link from "next/link";
-import Image from "next/image";
-import { useState, useEffect } from "react";
+import http from "../helper/http";
 import InfiniteScroll from "react-infinite-scroll-component";
+import React, {useState} from "react"
+import { useLoaderData, Outlet, Link } from "react-router-dom";
 
-export default function ContactBar({ init }) {
-  const [data, setData] = useState(init);
-  const [page, setPage] = useState(2);
-  const [name, setName] = useState("");
-  const [gender, setGender] = useState("");
-  const [status, setStatus] = useState("");
+export default function ContactBar(){
+    const info = useLoaderData();
+    const [data, setData] = useState(info.results);
+    const [page, setPage] = useState(2);
+    const [name, setName] = useState("");
+    const [gender, setGender] = useState("");
+    const [status, setStatus] = useState("");
 
-  const getMoreData = async () => {
-    const res = await http.get(`/character?page=${page}`);
-    setPage(page + 1);
-    const newData = res.results;
-    setData([...data, ...newData]);
-  };
+    const getMoreData = async () => {
+        const res = await http.get(`/character?page=${page}`);
+        setPage(page + 1);
+        const newData = res.results;
+        setData([...data, ...newData]);
+    };
 
-  return (
-    <div>
+    return(
+      <div>
       <div className="flex flex-col items-center border-l-2 rounded-none w-80 h-screen text-gray-700 bg-gray-100">
         <div className="border-b-2">
           <div className="mt-3 text-2xl font-bold">Contact</div>
@@ -79,10 +79,10 @@ export default function ContactBar({ init }) {
               {data.map((item) => {
                 return (
                   <button key={item.id}>
-                    <Link href={`/contact/${item.id}`}>
+                    <Link to={`/contact/${item.id}`}>
                       <div className="flex flex-row ">
                         <div className="w-3/12">
-                          <Image
+                          <img
                             className="border rounded-full"
                             alt="charIcon"
                             src={item.image}
@@ -103,6 +103,9 @@ export default function ContactBar({ init }) {
           </InfiniteScroll>
         </div>
       </div>
+      <div>
+        <Outlet />
+      </div>
     </div>
-  );
+    )
 }

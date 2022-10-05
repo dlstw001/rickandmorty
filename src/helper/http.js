@@ -6,7 +6,7 @@ const errParse = (err) => err.data;
 class http {
   constructor() {
     this.axiosInstance = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API,
+      baseURL: process.env.REACT_APP_API,
       timeout: 5000,
     });
     this.axiosInstance.interceptors.response.use(
