@@ -1,7 +1,7 @@
 import '../styles/globals.css'
 import Sidebar from "../components/common/Sidebar";
 import Head from "next/head";
-import Image from "next/image";
+import App from "next/app";
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -14,21 +14,18 @@ function MyApp({ Component, pageProps }) {
           href="https://mystickermania.com/cdn/stickers/rick-and-morty/sticker_2060-512x512.png"
         />
       </Head>
-      <Sidebar />
-      <Component {...pageProps} />
-      <footer className="flex-1 p-8 border-t-1 border-solid justify-center align-middle">
-        Powered by{" "}
-        <span>
-          <Image
-            src="/picklerick.webp"
-            alt="Pickle Rick"
-            width={20}
-            height={27}
-          />
-        </span>
-      </footer>
+      <div className="flex flex-row">
+        <Sidebar />
+        <Component {...pageProps} />
+      </div>
     </div>
   );
 }
+
+MyApp.getInitialProps = async (appContext) => {
+  // calls page's `getInitialProps` and fills `appProps.pageProps`
+  const appProps = await App.getInitialProps(appContext);
+  return { ...appProps };
+};
 
 export default MyApp
