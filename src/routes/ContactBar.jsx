@@ -1,12 +1,15 @@
 import http from "../helper/http";
 import InfiniteScroll from "react-infinite-scroll-component";
-import React, {useState} from "react"
+import React, {useState, useEffect} from "react"
 import { useLoaderData, Outlet, Link } from "react-router-dom";
 
 export default function ContactBar(){
     const info = useLoaderData();
     const [data, setData] = useState(info.results);
     const [page, setPage] = useState(2);
+    const [hasMore, setHasMore] = useState(true);
+    const [searchPage, setSearchPage] = useState(1);
+    const [search, setSearch] = useState(false);
     const [name, setName] = useState("");
     const [gender, setGender] = useState("");
     const [status, setStatus] = useState("");
@@ -18,6 +21,34 @@ export default function ContactBar(){
         setData([...data, ...newData]);
     };
 
+    const getMoreDataBySearch = async (condition) => {
+      const res = await http.get(`/character?${condition}`);
+      setSearchPage(searchPage + 1);
+      const newData = res.results;
+      setData([...data, ...newData]);
+  };
+    useEffect(()=>{
+      getMoreData()
+    },[])
+
+    useEffect(()=>{
+      if (search){
+        let filter = `page=${searchPage}`
+        if (name != ""){
+          filter += `&name=${name}`
+        }
+        if (gender != ""){
+          filter += `&gender=${gender}`
+        }
+        if (status != ""){
+          filter += `&status=${status}`
+        }
+        setData([])
+        setPage(1)
+        getMoreDataBySearch(filter)
+      }
+    },[name,gender,status])
+    
     return(
       <div>
       <div className="flex flex-col items-center border-l-2 rounded-none w-80 h-screen text-gray-700 bg-gray-100">
@@ -70,8 +101,8 @@ export default function ContactBar(){
           <InfiniteScroll
             dataLength={data.length}
             scrollableTarget="scrollableDiv"
-            next={getMoreData}
-            hasMore={true}
+            next={search ? getMoreDataBySearch : getMoreData}
+            hasMore={hasMore}
             loader={<h3> Loading...</h3>}
             endMessage={<h4>Nothing more to show</h4>}
           >
