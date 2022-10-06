@@ -2,58 +2,101 @@ import http from "../helper/http";
 import InfiniteScroll from "react-infinite-scroll-component";
 import React, {useState, useEffect} from "react"
 import { useLoaderData, Outlet, Link } from "react-router-dom";
+import { useRef } from "react";
 
-export default function ContactBar(){
-    const info = useLoaderData();
-    const [data, setData] = useState(info.results);
-    const [page, setPage] = useState(2);
-    const [hasMore, setHasMore] = useState(true);
-    const [searchPage, setSearchPage] = useState(1);
-    const [search, setSearch] = useState(false);
-    const [name, setName] = useState("");
-    const [gender, setGender] = useState("");
-    const [status, setStatus] = useState("");
+export default function ContactBar() {
+  const info = useLoaderData();
+  const [data, setData, getData] = useState(info.results);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchPage, setSearchPage] = useState(1);
+  const [search, setSearch] = useState(false);
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState("");
+  const [status, setStatus] = useState("");
 
-    const getMoreData = async () => {
-        const res = await http.get(`/character?page=${page}`);
-        setPage(page + 1);
-        const newData = res.results;
-        setData([...data, ...newData]);
-    };
+  const nameRef = useRef(null);
+  const genderRef = useRef("DEFAULTGENDER");
+  const statusRef = useRef("DEFAULTSTATUS");
 
-    const getMoreDataBySearch = async (condition) => {
-      const res = await http.get(`/character?${condition}`);
-      setSearchPage(searchPage + 1);
+  const getMoreData = async () => {
+    const res = await http.get(`/character?page=${page}`);
+    const newData = res.results;
+    setData([...data, ...newData]);
+  };
+
+  const getMoreDataBySearch = async () => {
+    let filter = `page=${searchPage}`;
+    if (name !== "") {
+      filter += `&name=${name}`;
+    }
+    if (gender !== "") {
+      filter += `&gender=${gender}`;
+    }
+    if (status !== "") {
+      filter += `&status=${status}`;
+    }
+    try {
+      const res = await http.get(`/character?${filter}`);
+      if (res.info.next == null) {
+        setHasMore(false);
+      }
       const newData = res.results;
       setData([...data, ...newData]);
+    } catch {
+      setHasMore(false);
+    }
   };
-    useEffect(()=>{
-      getMoreData()
-    },[])
 
-    useEffect(()=>{
-      if (search){
-        let filter = `page=${searchPage}`
-        if (name != ""){
-          filter += `&name=${name}`
-        }
-        if (gender != ""){
-          filter += `&gender=${gender}`
-        }
-        if (status != ""){
-          filter += `&status=${status}`
-        }
-        setData([])
-        setPage(1)
-        getMoreDataBySearch(filter)
-      }
-    },[name,gender,status])
-    
-    return(
-      <div>
+  const resetAll = async () => {
+    nameRef.current.value = null;
+    genderRef.current.value = "DEFAULTGENDER";
+    statusRef.current.value = "DEFAULTSTATUS";
+    setGender("");
+    setStatus("");
+    const res = await http.get(`/character?page=1`);
+    const newData = res.results;
+    setData([...newData]);
+  };
+
+  useEffect(() => {
+    if (page > 1) {
+      getMoreData();
+    }
+  }, [page]);
+
+  useEffect(() => {
+    if (searchPage > 1) {
+      getMoreDataBySearch();
+    }
+  }, [searchPage]);
+
+  useEffect(() => {
+    if (search) {
+      getMoreDataBySearch();
+    }
+  }, [name, gender, status]);
+
+  return (
+    <div className="flex flex-row w-full h-full">
       <div className="flex flex-col items-center border-l-2 rounded-none w-80 h-screen text-gray-700 bg-gray-100">
         <div className="border-b-2">
-          <div className="mt-3 text-2xl font-bold">Contact</div>
+          <div className="flex flex-row justify-around">
+            <div className="mt-3 text-2xl font-bold">Contact</div>
+            <button
+              className="mt-4 border-2 border-gray-800 rounded-lg"
+              onClick={() => {
+                setSearch(false);
+                setSearchPage(1);
+                setHasMore(true);
+                setData([]);
+                setPage(1);
+                resetAll();
+              }}
+            >
+              Reset
+            </button>
+          </div>
           <form className="mt-2 ml-1">
             <input
               className="h-9"
@@ -62,7 +105,14 @@ export default function ContactBar(){
               id="name"
               name="name"
               placeholder="Search by name"
-              onChange={(e) => setName(e.target.value)}
+              ref={nameRef}
+              onChange={(e) => {
+                setSearch(true);
+                setHasMore(true);
+                setSearchPage(1);
+                setData([]);
+                setName(e.target.value);
+              }}
             ></input>
           </form>
           <div className="flex flex-row justify-between mt-2 mb-3">
@@ -70,8 +120,15 @@ export default function ContactBar(){
               name="plan"
               id="plan"
               className="m-1"
+              ref={statusRef}
               defaultValue={"DEFAULTSTATUS"}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => {
+                setSearch(true);
+                setHasMore(true);
+                setSearchPage(1);
+                setData([]);
+                setStatus(e.target.value);
+              }}
             >
               <option value="DEFAULTSTATUS" disabled>
                 Status
@@ -84,8 +141,15 @@ export default function ContactBar(){
               name="plan"
               id="plan"
               className="m-1"
+              ref={genderRef}
               defaultValue={"DEFAULTGENDER"}
-              onChange={(e) => setGender(e.target.value)}
+              onChange={(e) => {
+                setSearch(true);
+                setHasMore(true);
+                setSearchPage(1);
+                setData([]);
+                setGender(e.target.value);
+              }}
             >
               <option value="DEFAULTGENDER" disabled>
                 Gender
@@ -101,42 +165,48 @@ export default function ContactBar(){
           <InfiniteScroll
             dataLength={data.length}
             scrollableTarget="scrollableDiv"
-            next={search ? getMoreDataBySearch : getMoreData}
+            next={
+              search
+                ? () => {
+                    setSearchPage(searchPage + 1);
+                  }
+                : () => {
+                    setPage(page + 1);
+                  }
+            }
             hasMore={hasMore}
             loader={<h3> Loading...</h3>}
             endMessage={<h4>Nothing more to show</h4>}
           >
-            <div className="flex flex-col mb-2 w-full">
+            <div className="flex flex-col w-full">
               {data.map((item) => {
                 return (
-                  <button key={item.id}>
-                    <Link to={`/contact/${item.id}`}>
-                      <div className="flex flex-row ">
-                        <div className="w-3/12">
-                          <img
-                            className="border rounded-full"
-                            alt="charIcon"
-                            src={item.image}
-                            height="60%"
-                            width="60%"
-                          />
-                        </div>
-                        <div className="flex flex-col ml-2 items-start w-8/12">
-                          <div className="truncate">{item.name}</div>
-                          <div>{item.species}</div>
-                        </div>
+                  <Link to={`/contact/${item.id}`} key={item.id}>
+                    <div className="flex flex-row justify-start">
+                      <div className="w-1/3 mt-2 pl-3">
+                        <img
+                          className="border rounded-full"
+                          alt="charIcon"
+                          src={item.image}
+                          height="60%"
+                          width="60%"
+                        />
                       </div>
-                    </Link>
-                  </button>
+                      <div className="w-2/3 pl-0 mt-2 flex flex-col items-start">
+                        <div className="truncate">{item.name}</div>
+                        <div>{item.species}</div>
+                      </div>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
           </InfiniteScroll>
         </div>
       </div>
-      <div>
+      <div className="w-full h-full">
         <Outlet />
       </div>
     </div>
-    )
+  );
 }
