@@ -2,22 +2,17 @@ import http from "../helper/http";
 import InfiniteScroll from "react-infinite-scroll-component";
 import React, {useState, useEffect} from "react"
 import { useLoaderData, Outlet, Link } from "react-router-dom";
-import { useRef } from "react";
 
 export default function ContactBar() {
   const info = useLoaderData();
-  const [data, setData, getData] = useState(info.results);
+  const [data, setData] = useState(info.results);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [searchPage, setSearchPage] = useState(1);
   const [search, setSearch] = useState(false);
   const [name, setName] = useState("");
-  const [gender, setGender] = useState("");
-  const [status, setStatus] = useState("");
-
-  const nameRef = useRef(null);
-  const genderRef = useRef("DEFAULTGENDER");
-  const statusRef = useRef("DEFAULTSTATUS");
+  const [gender, setGender] = useState("DEFAULTGENDER");
+  const [status, setStatus] = useState("DEFAULTSTATUS");
 
   const getMoreData = async () => {
     const res = await http.get(`/character?page=${page}`);
@@ -27,13 +22,14 @@ export default function ContactBar() {
 
   const getMoreDataBySearch = async () => {
     let filter = `page=${searchPage}`;
+    console.log(name);
     if (name !== "") {
       filter += `&name=${name}`;
     }
-    if (gender !== "") {
+    if (gender !== "DEFAULTGENDER") {
       filter += `&gender=${gender}`;
     }
-    if (status !== "") {
+    if (status !== "DEFAULTSTATUS") {
       filter += `&status=${status}`;
     }
     try {
@@ -49,11 +45,9 @@ export default function ContactBar() {
   };
 
   const resetAll = async () => {
-    nameRef.current.value = null;
-    genderRef.current.value = "DEFAULTGENDER";
-    statusRef.current.value = "DEFAULTSTATUS";
-    setGender("");
-    setStatus("");
+    setName("");
+    setGender("DEFAULTGENDER");
+    setStatus("DEFAULTSTATUS");
     const res = await http.get(`/character?page=1`);
     const newData = res.results;
     setData([...newData]);
@@ -73,6 +67,7 @@ export default function ContactBar() {
 
   useEffect(() => {
     if (search) {
+      setPage(1);
       getMoreDataBySearch();
     }
   }, [name, gender, status]);
@@ -105,7 +100,7 @@ export default function ContactBar() {
               id="name"
               name="name"
               placeholder="Search by name"
-              ref={nameRef}
+              value={name}
               onChange={(e) => {
                 setSearch(true);
                 setHasMore(true);
@@ -120,8 +115,7 @@ export default function ContactBar() {
               name="plan"
               id="plan"
               className="m-1"
-              ref={statusRef}
-              defaultValue={"DEFAULTSTATUS"}
+              value={status}
               onChange={(e) => {
                 setSearch(true);
                 setHasMore(true);
@@ -141,8 +135,7 @@ export default function ContactBar() {
               name="plan"
               id="plan"
               className="m-1"
-              ref={genderRef}
-              defaultValue={"DEFAULTGENDER"}
+              value={gender}
               onChange={(e) => {
                 setSearch(true);
                 setHasMore(true);
