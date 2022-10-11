@@ -57,20 +57,20 @@ export default function ContactBar() {
     if (page > 1) {
       getMoreData();
     }
-  }, [page]);
+  }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (searchPage > 1) {
       getMoreDataBySearch();
     }
-  }, [searchPage]);
+  }, [searchPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (search) {
       setPage(1);
       getMoreDataBySearch();
     }
-  }, [name, gender, status]);
+  }, [search, name, gender, status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-row w-full h-full">
