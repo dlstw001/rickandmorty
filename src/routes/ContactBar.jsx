@@ -22,7 +22,6 @@ export default function ContactBar() {
 
   const getMoreDataBySearch = async () => {
     let filter = `page=${searchPage}`;
-    console.log(name);
     if (name !== "") {
       filter += `&name=${name}`;
     }

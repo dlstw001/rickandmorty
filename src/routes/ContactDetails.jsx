@@ -22,7 +22,7 @@ export default function ContactDetails() {
 
   useEffect(() => {
     getEpispdeData();
-  }, [data]);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col w-full h-full">

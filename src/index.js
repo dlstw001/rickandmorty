@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Root from './routes/root';
+import Root from "./routes/Root";
 import ErrorPage from "./error-page";
 import ContactBar from './routes/ContactBar';
 import ContactDetails from './routes/ContactDetails';
